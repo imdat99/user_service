@@ -1,0 +1,58 @@
+using System;
+using Account.Domain.Common;
+
+namespace Account.Domain.Entities;
+
+public class UserSession : BaseEntity
+{
+    public string UserId { get; private set; } = string.Empty;
+    public string SessionToken { get; private set; } = string.Empty;
+    public string? DeviceInfo { get; private set; }
+    public string? IpAddress { get; private set; }
+    public string? UserAgent { get; private set; }
+    public bool IsActive { get; private set; }
+    public DateTime ExpiresAt { get; private set; }
+
+    // Navigation property
+    public User? User { get; private set; }
+
+    // Required by EF Core
+    protected UserSession() { }
+
+    public UserSession(
+        string userId, 
+        string sessionToken, 
+        DateTime expiresAt, 
+        string? deviceInfo = null, 
+        string? ipAddress = null, 
+        string? userAgent = null)
+    {
+        Id = Guid.NewGuid().ToString();
+        UserId = userId;
+        SessionToken = sessionToken;
+        ExpiresAt = expiresAt;
+        DeviceInfo = deviceInfo;
+        IpAddress = ipAddress;
+        UserAgent = userAgent;
+        IsActive = true;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void ExtendSession(DateTime newExpiresAt)
+    {
+        ExpiresAt = newExpiresAt;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public bool IsExpired()
+    {
+        return DateTime.UtcNow > ExpiresAt;
+    }
+}

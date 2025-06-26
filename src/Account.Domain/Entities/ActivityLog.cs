@@ -1,0 +1,60 @@
+using System;
+using System.Text.Json;
+using Account.Domain.Common;
+
+namespace Account.Domain.Entities;
+
+public class ActivityLog : BaseEntity
+{
+    public string UserId { get; private set; } = string.Empty;
+    public ActivityType ActivityType { get; private set; }
+    public string? Description { get; private set; }
+    public string? IpAddress { get; private set; }
+    public string? UserAgent { get; private set; }
+    public string? Metadata { get; private set; }  // JSON-serialized metadata
+
+    // Navigation property
+    public User? User { get; private set; }
+
+    // Required by EF Core
+    protected ActivityLog() { }
+
+    public ActivityLog(
+        string userId, 
+        ActivityType activityType, 
+        string? description = null, 
+        string? ipAddress = null, 
+        string? userAgent = null, 
+        object? metadata = null)
+    {
+        Id = Guid.NewGuid().ToString();
+        UserId = userId;
+        ActivityType = activityType;
+        Description = description;
+        IpAddress = ipAddress;
+        UserAgent = userAgent;
+        
+        if (metadata != null)
+        {
+            Metadata = JsonSerializer.Serialize(metadata);
+        }
+        
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+public enum ActivityType
+{
+    Login,
+    Logout,
+    ProfileUpdate,
+    PasswordChange,
+    EmailChange,
+    PhoneChange,
+    TwoFactorEnable,
+    TwoFactorDisable,
+    PaymentAdd,
+    PaymentRemove,
+    Transaction
+}
