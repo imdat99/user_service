@@ -1,45 +1,67 @@
-using System;
-using Account.Domain.Common;
-
+﻿using Account.Shared.Common;
 namespace Account.Domain.Entities;
-
-public class User : BaseEntity
+public enum AccountStatus
 {
-    public string Email { get; private set; } = string.Empty;
-    public string? Username { get; private set; }
-    public string PasswordHash { get; private set; } = string.Empty;
-    public string FirstName { get; private set; } = string.Empty;
-    public string LastName { get; private set; } = string.Empty;
-    public string? Phone { get; private set; }
-    public DateTime? DateOfBirth { get; private set; }
-    public string? AvatarUrl { get; private set; }
-    public bool EmailVerified { get; private set; }
-    public bool PhoneVerified { get; private set; }
+    Pending,
+    Active,
+    Inactive,
+    Suspended
+}
+
+public partial class User : AggregateRoot
+{
+    public string Email { get; set; } = null!;
+
+    public string? Username { get; set; }
+
+    public string PasswordHash { get; set; } = null!;
+
+    public string FirstName { get; set; } = null!;
+
+    public string LastName { get; set; } = null!;
+
+    public string? Phone { get; set; }
+
+    public DateOnly? DateOfBirth { get; set; }
+
+    public string? AvatarUrl { get; set; }
+
+    public bool? EmailVerified { get; set; }
+
+    public bool? PhoneVerified { get; set; }
+
     public AccountStatus AccountStatus { get; private set; } = AccountStatus.Pending;
-    public DateTime? LastLoginAt { get; private set; }
-    
-    // Navigation properties
-    public UserProfile? Profile { get; private set; }
-    public UserTwoFactor? TwoFactor { get; private set; }
-    public ICollection<UserSession> Sessions { get; private set; } = new List<UserSession>();
-    public ICollection<ActivityLog> ActivityLogs { get; private set; } = new List<ActivityLog>();
-    public NotificationSettings? NotificationSettings { get; private set; }
-    public PrivacySettings? PrivacySettings { get; private set; }
-    public ICollection<PaymentMethod> PaymentMethods { get; private set; } = new List<PaymentMethod>();
-    public ICollection<Transaction> Transactions { get; private set; } = new List<Transaction>();
-    public ICollection<UserToken> Tokens { get; private set; } = new List<UserToken>();
-    public ICollection<ApiKey> ApiKeys { get; private set; } = new List<ApiKey>();
 
-    // Required by EF Core
+    public DateTime? LastLoginAt { get; set; }
+
+    public virtual ICollection<ActivityLog> ActivityLogs { get; set; } = new List<ActivityLog>();
+
+    public virtual ICollection<ApiKey> ApiKeys { get; set; } = new List<ApiKey>();
+
+    public virtual NotificationSetting? NotificationSetting { get; set; }
+
+    public virtual ICollection<PaymentMethod> PaymentMethods { get; set; } = new List<PaymentMethod>();
+
+    public virtual PrivacySetting? PrivacySetting { get; set; }
+
+    public virtual ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+
+    public virtual User2fa? User2fa { get; set; }
+
+    public virtual UserProfile? UserProfile { get; set; }
+
+    public virtual ICollection<UserSession> UserSessions { get; set; } = new List<UserSession>();
+
+    public virtual ICollection<UserToken> UserTokens { get; set; } = new List<UserToken>();
+
     protected User() { }
-
     public User(
-        string email, 
-        string passwordHash, 
-        string firstName, 
+        string email,
+        string passwordHash,
+        string firstName,
         string lastName)
     {
-        Id = Guid.NewGuid().ToString();
+        Id = Guid.NewGuid();
         Email = email.ToLowerInvariant(); // Always store emails lowercase
         PasswordHash = passwordHash;
         FirstName = firstName;
@@ -48,7 +70,6 @@ public class User : BaseEntity
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
-
     public void SetUsername(string? username)
     {
         if (string.IsNullOrWhiteSpace(username))
@@ -69,7 +90,7 @@ public class User : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
     
-    public void UpdatePersonalInfo(string firstName, string lastName, DateTime? dateOfBirth)
+    public void UpdatePersonalInfo(string firstName, string lastName, DateOnly? dateOfBirth)
     {
         FirstName = firstName;
         LastName = lastName;

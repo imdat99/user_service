@@ -1,60 +1,49 @@
-using System;
-using System.Text.Json;
-using Account.Domain.Common;
+﻿using System;
+using System.Collections.Generic;
+using Account.Shared.Common;
 
 namespace Account.Domain.Entities;
 
-public class ActivityLog : BaseEntity
+public partial class ActivityLog : BaseEntity<Guid>
 {
-    public string UserId { get; private set; } = string.Empty;
-    public ActivityType ActivityType { get; private set; }
-    public string? Description { get; private set; }
-    public string? IpAddress { get; private set; }
-    public string? UserAgent { get; private set; }
-    public string? Metadata { get; private set; }  // JSON-serialized metadata
+    public Guid UserId { get; set; }
 
-    // Navigation property
-    public User? User { get; private set; }
+    public ActivityType ActivityType { get; set; } = ActivityType.Login;
 
+    public string? Description { get; set; }
+
+    public string? IpAddress { get; set; }
+
+    public string? UserAgent { get; set; }
+
+    public string? Metadata { get; set; }
+
+    public virtual User User { get; set; } = null!;
     // Required by EF Core
     protected ActivityLog() { }
-
-    public ActivityLog(
-        string userId, 
-        ActivityType activityType, 
-        string? description = null, 
-        string? ipAddress = null, 
-        string? userAgent = null, 
-        object? metadata = null)
-    {
-        Id = Guid.NewGuid().ToString();
-        UserId = userId;
-        ActivityType = activityType;
-        Description = description;
-        IpAddress = ipAddress;
-        UserAgent = userAgent;
-        
-        if (metadata != null)
-        {
-            Metadata = JsonSerializer.Serialize(metadata);
-        }
-        
-        CreatedAt = DateTime.UtcNow;
-        UpdatedAt = DateTime.UtcNow;
-    }
 }
-
 public enum ActivityType
 {
+    [System.ComponentModel.DataAnnotations.Display(Name = "login")]
     Login,
-    Logout,
-    ProfileUpdate,
-    PasswordChange,
-    EmailChange,
-    PhoneChange,
-    TwoFactorEnable,
-    TwoFactorDisable,
-    PaymentAdd,
-    PaymentRemove,
-    Transaction
+    [System.ComponentModel.DataAnnotations.Display(Name = "logout")]
+    Logout ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "profile_update")]
+    Profileupdate ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "password_change")]
+    Passwordchange ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "email_change")]
+    Emailchange,
+    [System.ComponentModel.DataAnnotations.Display(Name = "phone_change")]
+    Phonechange ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "2fa_enable")]
+    TwofaEnable,
+    [System.ComponentModel.DataAnnotations.Display(Name = "2fa_disable")]
+    TwofaDisable ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "payment_add")]
+    Paymentadd ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "payment_remove")]
+    Paymentremove ,
+    [System.ComponentModel.DataAnnotations.Display(Name = "transaction")]
+    Transaction,
 }

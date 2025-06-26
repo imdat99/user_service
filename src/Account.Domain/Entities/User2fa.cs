@@ -1,28 +1,32 @@
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Text.Json;
-using Account.Domain.Common;
+using Account.Shared.Common;
 
 namespace Account.Domain.Entities;
 
-public class UserTwoFactor : BaseEntity
+public partial class User2fa : BaseEntity<Guid>
 {
-    public string UserId { get; private set; } = string.Empty;
-    public bool IsEnabled { get; private set; }
-    public string? SecretKey { get; private set; }
-    public string? BackupCodes { get; private set; } // JSON-serialized backup codes
-    public TwoFactorMethod Method { get; private set; }
-    public string? PhoneNumber { get; private set; }
-    public string? EmailAddress { get; private set; }
+    public Guid UserId { get; set; }
 
-    // Navigation property
-    public User? User { get; private set; }
+    public bool? IsEnabled { get; set; }
 
+    public string? SecretKey { get; set; }
+
+    public string? BackupCodes { get; set; }
+
+    public TwoFactorMethod? Method { get; set; }
+
+    public string? PhoneNumber { get; set; }
+
+    public string? EmailAddress { get; set; }
+    public virtual User User { get; set; } = null!;
     // Required by EF Core
-    protected UserTwoFactor() { }
+    protected User2fa() { }
 
-    public UserTwoFactor(string userId)
+    public User2fa(Guid userId)
     {
-        Id = Guid.NewGuid().ToString();
+        Id = Guid.NewGuid();
         UserId = userId;
         IsEnabled = false;
         Method = TwoFactorMethod.Totp;
@@ -70,7 +74,6 @@ public class UserTwoFactor : BaseEntity
         UpdatedAt = DateTime.UtcNow;
     }
 }
-
 public enum TwoFactorMethod
 {
     Totp,

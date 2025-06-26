@@ -6,130 +6,67 @@ namespace Account.Infrastructure.Data.Configurations;
 
 public class UserConfiguration : IEntityTypeConfiguration<User>
 {
-    public void Configure(EntityTypeBuilder<User> builder)
+    public void Configure(EntityTypeBuilder<User> entity)
     {
-        builder.ToTable("users");
+        entity.HasKey(e => e.Id).HasName("PRIMARY");
 
-        builder.HasKey(u => u.Id);
+        entity.ToTable("users");
 
-        builder.Property(u => u.Id)
-            .HasColumnName("id");
+        entity.HasIndex(e => e.Email, "email").IsUnique();
 
-        builder.Property(u => u.Email)
-            .HasColumnName("email")
-            .IsRequired()
-            .HasMaxLength(255);
-        
-        builder.HasIndex(u => u.Email)
-            .IsUnique();
+        entity.HasIndex(e => e.AccountStatus, "idx_account_status");
 
-        builder.Property(u => u.Username)
-            .HasColumnName("username")
-            .HasMaxLength(100);
-        
-        builder.HasIndex(u => u.Username)
-            .IsUnique();
+        entity.HasIndex(e => e.CreatedAt, "idx_created_at");
 
-        builder.Property(u => u.PasswordHash)
-            .HasColumnName("password_hash")
-            .IsRequired()
-            .HasMaxLength(255);
+        entity.HasIndex(e => e.DeletedAt, "idx_deleted_at");
 
-        builder.Property(u => u.FirstName)
-            .HasColumnName("first_name")
-            .IsRequired()
-            .HasMaxLength(100);
+        entity.HasIndex(e => e.Username, "idx_username").IsUnique();
 
-        builder.Property(u => u.LastName)
-            .HasColumnName("last_name")
-            .IsRequired()
-            .HasMaxLength(100);
-
-        builder.Property(u => u.Phone)
-            .HasColumnName("phone")
-            .HasMaxLength(20);
-
-        builder.Property(u => u.DateOfBirth)
-            .HasColumnName("date_of_birth");
-
-        builder.Property(u => u.AvatarUrl)
-            .HasColumnName("avatar_url")
-            .HasMaxLength(500);
-
-        builder.Property(u => u.EmailVerified)
-            .HasColumnName("email_verified")
-            .HasDefaultValue(false);
-
-        builder.Property(u => u.PhoneVerified)
-            .HasColumnName("phone_verified")
-            .HasDefaultValue(false);
-
-        builder.Property(u => u.AccountStatus)
-            .HasColumnName("account_status")
-            .HasDefaultValue(AccountStatus.Pending)
-            .HasConversion<string>();
-
-        builder.Property(u => u.LastLoginAt)
-            .HasColumnName("last_login_at");
-
-        builder.Property(u => u.CreatedAt)
+        entity.Property(e => e.Id).HasColumnName("id");
+        entity.Property(e => e.AccountStatus)
+            .HasDefaultValueSql("'pending'")
+            .HasColumnType("enum('active','inactive','suspended','pending')")
+            .HasColumnName("account_status");
+        entity.Property(e => e.AvatarUrl)
+            .HasMaxLength(500)
+            .HasColumnName("avatar_url");
+        entity.Property(e => e.CreatedAt)
+            .HasDefaultValueSql("current_timestamp()")
+            .HasColumnType("timestamp")
             .HasColumnName("created_at");
-
-        builder.Property(u => u.UpdatedAt)
-            .HasColumnName("updated_at");
-
-        builder.Property(u => u.DeletedAt)
+        entity.Property(e => e.DateOfBirth).HasColumnName("date_of_birth");
+        entity.Property(e => e.DeletedAt)
+            .HasColumnType("timestamp")
             .HasColumnName("deleted_at");
-
-        // Relationships
-        builder.HasOne(u => u.Profile)
-            .WithOne(p => p!.User)
-            .HasForeignKey<UserProfile>(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne(u => u.TwoFactor)
-            .WithOne(tf => tf!.User)
-            .HasForeignKey<UserTwoFactor>(tf => tf.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne(u => u.NotificationSettings)
-            .WithOne(ns => ns!.User)
-            .HasForeignKey<NotificationSettings>(ns => ns.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasOne(u => u.PrivacySettings)
-            .WithOne(ps => ps!.User)
-            .HasForeignKey<PrivacySettings>(ps => ps.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(u => u.Sessions)
-            .WithOne(s => s!.User)
-            .HasForeignKey(s => s.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(u => u.ActivityLogs)
-            .WithOne(al => al!.User)
-            .HasForeignKey(al => al.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(u => u.PaymentMethods)
-            .WithOne(pm => pm!.User)
-            .HasForeignKey(pm => pm.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(u => u.Transactions)
-            .WithOne(t => t!.User)
-            .HasForeignKey(t => t.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(u => u.Tokens)
-            .WithOne(t => t!.User)
-            .HasForeignKey(t => t.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasMany(u => u.ApiKeys)
-            .WithOne(ak => ak!.User)
-            .HasForeignKey(ak => ak.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+        entity.Property(e => e.Email).HasColumnName("email");
+        entity.Property(e => e.EmailVerified)
+            .HasDefaultValueSql("'0'")
+            .HasColumnName("email_verified");
+        entity.Property(e => e.FirstName)
+            .HasMaxLength(100)
+            .HasColumnName("first_name");
+        entity.Property(e => e.LastLoginAt)
+            .HasColumnType("timestamp")
+            .HasColumnName("last_login_at");
+        entity.Property(e => e.LastName)
+            .HasMaxLength(100)
+            .HasColumnName("last_name");
+        entity.Property(e => e.PasswordHash)
+            .HasMaxLength(255)
+            .HasColumnName("password_hash");
+        entity.Property(e => e.Phone)
+            .HasMaxLength(20)
+            .HasColumnName("phone");
+        entity.Property(e => e.PhoneVerified)
+            .HasDefaultValueSql("'0'")
+            .HasColumnName("phone_verified");
+        entity.Property(e => e.UpdatedAt)
+            .ValueGeneratedOnAddOrUpdate()
+            .HasDefaultValueSql("current_timestamp()")
+            .HasColumnType("timestamp")
+            .HasColumnName("updated_at");
+        entity.Property(e => e.Username)
+            .HasMaxLength(100)
+            .HasColumnName("username");
     }
 }

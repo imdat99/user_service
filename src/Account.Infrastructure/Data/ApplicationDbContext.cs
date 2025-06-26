@@ -6,34 +6,49 @@ namespace Account.Infrastructure.Data;
 
 public class ApplicationDbContext : DbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        : base(options)
     {
     }
 
-    public DbSet<User> Users { get; set; } = null!;
-    public DbSet<UserProfile> UserProfiles { get; set; } = null!;
-    public DbSet<UserTwoFactor> UserTwoFactors { get; set; } = null!;
-    public DbSet<UserSession> UserSessions { get; set; } = null!;
-    public DbSet<ActivityLog> ActivityLogs { get; set; } = null!;
-    public DbSet<NotificationSettings> NotificationSettings { get; set; } = null!;
-    public DbSet<PrivacySettings> PrivacySettings { get; set; } = null!;
-    public DbSet<PaymentMethod> PaymentMethods { get; set; } = null!;
-    public DbSet<Transaction> Transactions { get; set; } = null!;
-    public DbSet<UserToken> UserTokens { get; set; } = null!;
-    public DbSet<ApiKey> ApiKeys { get; set; } = null!;
+    public virtual DbSet<ActivityLog> ActivityLogs { get; set; }
+
+    public virtual DbSet<ApiKey> ApiKeys { get; set; }
+
+    public virtual DbSet<NotificationSetting> NotificationSettings { get; set; }
+
+    public virtual DbSet<PaymentMethod> PaymentMethods { get; set; }
+
+    public virtual DbSet<PrivacySetting> PrivacySettings { get; set; }
+
+    public virtual DbSet<Transaction> Transactions { get; set; }
+
+    public virtual DbSet<User> Users { get; set; }
+
+    public virtual DbSet<User2fa> User2fas { get; set; }
+
+    public virtual DbSet<UserProfile> UserProfiles { get; set; }
+
+    public virtual DbSet<UserSession> UserSessions { get; set; }
+
+    public virtual DbSet<UserToken> UserTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new UserConfiguration());
-        modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
-        modelBuilder.ApplyConfiguration(new UserTwoFactorConfiguration());
-        modelBuilder.ApplyConfiguration(new UserSessionConfiguration());
+        modelBuilder
+            .UseCollation("utf8mb4_unicode_ci")
+            .HasCharSet("utf8mb4");
+        // modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new ActivityLogConfiguration());
-        modelBuilder.ApplyConfiguration(new NotificationSettingsConfiguration());
-        modelBuilder.ApplyConfiguration(new PrivacySettingsConfiguration());
-        modelBuilder.ApplyConfiguration(new PaymentMethodConfiguration());
-        modelBuilder.ApplyConfiguration(new TransactionConfiguration());
-        modelBuilder.ApplyConfiguration(new UserTokenConfiguration());
         modelBuilder.ApplyConfiguration(new ApiKeyConfiguration());
+        modelBuilder.ApplyConfiguration(new NotificationSettingConfiguration());
+        modelBuilder.ApplyConfiguration(new PaymentMethodConfiguration());
+        modelBuilder.ApplyConfiguration(new PrivacySettingConfiguration());
+        modelBuilder.ApplyConfiguration(new TransactionConfiguration());
+        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new User2faConfiguration());
+        modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
+        modelBuilder.ApplyConfiguration(new UserSessionConfiguration());
+        modelBuilder.ApplyConfiguration(new UserTokenConfiguration());
     }
 }

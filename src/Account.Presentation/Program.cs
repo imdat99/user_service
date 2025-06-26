@@ -1,9 +1,12 @@
 using Account.Application.Common;
+using Account.Application.Interfaces;
 using Account.Application.Services;
 using Account.Domain.Repositories;
 using Account.Infrastructure.Data;
 using Account.Infrastructure.Repositories;
-using Account.Infrastructure.Services;
+using Microsoft.AspNetCore.Identity;
+
+// using Account.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +28,7 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Add more repositories as needed
 
 // Application Services
-builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 // Add more application services here
 
@@ -42,8 +45,29 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwagger(c => c.RouteTemplate = "api/swagger/{documentname}/swagger.json");
+    app.UseSwaggerUI(c =>
+    {
+        c.RoutePrefix = "api/swagger";
+        c.SwaggerEndpoint("/api/swagger/v1/swagger.json", "ACMID API");
+    });
+    app.MapGet("/debug/routes", (IEnumerable<EndpointDataSource> endpointSources) =>
+    {
+        var routes = endpointSources
+            .SelectMany(es => es.Endpoints)
+            .OfType<RouteEndpoint>()
+            .Select(e => new {
+                Pattern = e.RoutePattern.RawText,
+                Methods = e.Metadata
+                    .OfType<HttpMethodMetadata>()
+                    .FirstOrDefault()?
+                    .HttpMethods
+            });
+
+        return Results.Json(routes);
+    });
+
+
 }
 
 app.UseHttpsRedirection();

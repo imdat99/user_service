@@ -1,23 +1,17 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using Account.Domain.Common;
+using Account.Shared.Common;
 using Account.Domain.Repositories;
 using Account.Infrastructure.Data;
 
 namespace Account.Infrastructure.Repositories;
 
-public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
+public class GenericRepository<T>(ApplicationDbContext context) : IGenericRepository<T> where T : BaseEntity<Guid>
 {
-    protected readonly ApplicationDbContext _context;
-    protected readonly DbSet<T> _dbSet;
+    protected readonly ApplicationDbContext _context = context;
+    protected readonly DbSet<T> _dbSet = context.Set<T>();
 
-    public GenericRepository(ApplicationDbContext context)
-    {
-        _context = context;
-        _dbSet = context.Set<T>();
-    }
-
-    public virtual async Task<T?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
+    public virtual async Task<T?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbSet
             .Where(e => e.DeletedAt == null)
@@ -57,7 +51,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
         return await SaveChangesAsync(cancellationToken);
     }
 
-    public virtual async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var entity = await GetByIdAsync(id, cancellationToken);
         if (entity == null)
@@ -67,7 +61,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : BaseEntity
         return await SaveChangesAsync(cancellationToken);
     }
 
-    public virtual async Task<bool> SoftDeleteAsync(string id, CancellationToken cancellationToken = default)
+    public virtual async Task<bool> SoftDeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var entity = await GetByIdAsync(id, cancellationToken);
         if (entity == null)

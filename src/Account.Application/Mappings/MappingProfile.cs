@@ -2,8 +2,7 @@ using Account.Application.DTOs;
 using Account.Domain.Entities;
 
 namespace Account.Application.Mappings;
-
-public class MappingProfile : Profile
+public class MappingProfile : AutoMapper.Profile
 {
     public MappingProfile()
     {
