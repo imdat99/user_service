@@ -1,0 +1,67 @@
+using System;
+using Account.Domain.Common;
+
+namespace Account.Domain.Entities;
+
+public class UserProfile : BaseEntity
+{
+    public string UserId { get; private set; } = string.Empty;
+    public string? Bio { get; private set; }
+    public string? Website { get; private set; }
+    public string? Location { get; private set; }
+    public string Timezone { get; private set; } = "UTC";
+    public string Language { get; private set; } = "en";
+    public Gender? Gender { get; private set; }
+    public ProfileVisibility ProfileVisibility { get; private set; } = ProfileVisibility.Public;
+
+    // Navigation property
+    public User? User { get; private set; }
+
+    // Required by EF Core
+    protected UserProfile() { }
+
+    public UserProfile(string userId)
+    {
+        Id = Guid.NewGuid().ToString();
+        UserId = userId;
+        CreatedAt = DateTime.UtcNow;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateProfile(string? bio, string? website, string? location)
+    {
+        Bio = bio;
+        Website = website;
+        Location = location;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdatePreferences(string timezone, string language, Gender? gender)
+    {
+        Timezone = timezone;
+        Language = language;
+        Gender = gender;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateVisibility(ProfileVisibility visibility)
+    {
+        ProfileVisibility = visibility;
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
+
+public enum Gender
+{
+    Male,
+    Female,
+    Other,
+    PreferNotToSay
+}
+
+public enum ProfileVisibility
+{
+    Public,
+    FriendsOnly,
+    Private
+}

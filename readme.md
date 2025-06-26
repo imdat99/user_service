@@ -1,95 +1,252 @@
-# Command Tạo
-```shell
-dotnet new sln && dotnet sln add src
-dotnet new webapi -n User.API -o src/User.API && dotnet sln add src/User.API/User.API.csproj
-dotnet new classlib -n User.Application -o src/User.Application && dotnet sln add src/User.Application/User.Application.csproj
-dotnet new classlib -n User.Domain -o src/User.Domain && dotnet sln add src/User.Domain/User.Domain.csproj
-dotnet new classlib -n User.Infrastructure -o src/User.Infrastructure && dotnet sln add src/User.Infrastructure/User.Infrastructure.csproj
-dotnet new classlib -n User.Persistence -o src/User.Persistence && dotnet sln add src/User.Persistence/User.Persistence.csproj
-```
-# Command Xoá
-```shell
-dotnet sln remove src/User.API/User.API.csproj && rm -rf src/User.API
-```
-Anh vẽ cho chú cái **sơ đồ cấu trúc thư mục** chuẩn bài cho một project **.NET 8 Clean Architecture + DDD** — không lý thuyết lòng vòng, nhìn là hiểu flow, chia đúng tầng, đúng trách nhiệm.
+Anh vẽ cho chú cái **sơ đồ cấu trúc thư mục** chuẩn bài cho một project **.NET 9 Clean Architecture + DDD** — không lý thuyết lòng vòng, nhìn là hiểu flow, chia đúng tầng, đúng trách nhiệm.
 
 ---
+Domain-Driven Design (DDD) trong ASP.NET Core thường được tổ chức theo cấu trúc phân lớp rõ ràng. Dưới đây là cách tổ chức một dự án ASP.NET Core theo DDD:
 
-### 🗂️ **Cấu trúc thư mục tổng thể**
-
-```plaintext
-/MyApp (solution)
-│
-├── MyApp.API                  ← 🧾 Web API đầu vào, controller, DI
-│   └── Controllers/
-│   └── Program.cs
-│
-├── MyApp.Application          ← 🧠 Use Cases, DTOs, interface repo, CQRS
-│   └── Orders/
-│       ├── Commands/
-│       │   ├── CreateOrderCommand.cs
-│       │   └── CreateOrderHandler.cs
-│       ├── Queries/
-│       └── Dtos/
-│   └── Common/
-│       ├── Interfaces/
-│       └── Behaviors/         ← (Validation, Logging, etc.)
-│
-├── MyApp.Domain               ← 📦 Core domain logic: Entity, VO, Events
-│   └── Entities/
-│       └── Order.cs
-│   └── ValueObjects/
-│       └── OrderItem.cs
-│   └── Events/
-│   └── Enums/
-│
-├── MyApp.Persistence          ← 💾 EF Core DbContext, migrations, repo impl
-│   ├── Repositories/
-│   │   └── OrderRepository.cs
-│   └── AppDbContext.cs
-│
-├── MyApp.Infrastructure       ← 🌐 Implementation infra: Email, File, Identity
-│   └── Email/
-│   └── FileStorage/
-│   └── DependencyInjection.cs
-│
-├── MyApp.SharedKernel         ← 🔧 BaseEntity, Result<T>, Errors, Utils (tuỳ chọn)
-│   └── Base/
-│   └── ValueObjects/
-│
-└── MyApp.sln
-```
-
----
-
-### Sơ đồ đơn giản hóa
-
-```plaintext
-📁 MyApp (solution)
-├── 🧾 API                → Giao tiếp với client (Controller, DI)
-├── 🧠 Application        → Nơi xử lý UseCase (CQRS)
-├── 📦 Domain            → Core nghiệp vụ (Entity, VO, Event)
-├── 💾 Persistence       → EF Core, Repository Impl
-├── 🌐 Infrastructure     → Email, Logger, 3rd Party
-├── 🔧 SharedKernel       → BaseEntity, helpers, Result<T>
-```
-
----
-
-### Flow xử lý request:
+## Cấu trúc thư mục chính
 
 ```
-API Controller
-   ↓
-Application Command (CreateOrderCommand)
-   ↓
-Handler xử lý UseCase
-   ↓
-Gọi Domain để khởi tạo Order
-   ↓
-Order.AddItem() → Domain logic
-   ↓
-Lưu Order qua Repository (interface)
-   ↓
-Repository Impl (EF Core) ở Persistence
+Account/
+├── src/
+│   ├── Account.Domain/          # Lớp Domain
+│   ├── Account.Application/     # Lớp Application
+│   ├── Account.Infrastructure/  # Lớp Infrastructure
+│   ├── Account.Presentation/    # Lớp Presentation (Web API)
+│   └── Account.Shared/          # Shared Kernel
+├── tests/
+└── docs/
 ```
+
+## Chi tiết từng lớp
+
+### 1. Domain Layer (Account.Domain)
+Đây là trung tâm của ứng dụng, chứa business logic thuần túy:
+
+```
+Domain/
+├── Entities/
+│   ├── User.cs
+│   ├── Order.cs
+│   └── Product.cs
+├── ValueObjects/
+│   ├── Email.cs
+│   ├── Money.cs
+│   └── Address.cs
+├── Aggregates/
+│   └── OrderAggregate/
+├── DomainEvents/
+│   ├── OrderCreatedEvent.cs
+│   └── UserRegisteredEvent.cs
+├── DomainServices/
+│   └── PricingService.cs
+├── Repositories/
+│   ├── IUserRepository.cs
+│   └── IOrderRepository.cs
+├── Specifications/
+└── Exceptions/
+    └── DomainException.cs
+```
+
+### 2. Application Layer (Account.Application)
+Điều phối các use cases và orchestrate domain objects:
+
+```
+Application/
+├── Commands/
+│   ├── CreateOrderCommand.cs
+│   └── UpdateUserCommand.cs
+├── Queries/
+│   ├── GetOrderQuery.cs
+│   └── GetUserQuery.cs
+├── Handlers/
+│   ├── CreateOrderHandler.cs
+│   └── GetOrderHandler.cs
+├── DTOs/
+│   ├── OrderDto.cs
+│   └── UserDto.cs
+├── Services/
+│   └── ApplicationService.cs
+├── Interfaces/
+│   └── IEmailService.cs
+├── Validators/
+│   └── CreateOrderValidator.cs
+└── Mappings/
+    └── MappingProfile.cs
+```
+
+### 3. Infrastructure Layer (Account.Infrastructure)
+Triển khai các interface từ Domain và Application:
+
+```
+Infrastructure/
+├── Data/
+│   ├── ApplicationDbContext.cs
+│   ├── Configurations/
+│   │   ├── UserConfiguration.cs
+│   │   └── OrderConfiguration.cs
+│   └── Migrations/
+├── Repositories/
+│   ├── UserRepository.cs
+│   └── OrderRepository.cs
+├── Services/
+│   ├── EmailService.cs
+│   └── FileService.cs
+├── External/
+│   └── PaymentGateway.cs
+└── Caching/
+    └── CacheService.cs
+```
+
+### 4. Presentation Layer (Account.Presentation)
+API Controllers và các endpoint:
+
+```
+Presentation/
+├── Controllers/
+│   ├── UsersController.cs
+│   └── OrdersController.cs
+├── Middlewares/
+│   ├── ExceptionMiddleware.cs
+│   └── AuthenticationMiddleware.cs
+├── Filters/
+│   └── ValidationFilter.cs
+├── Models/
+│   ├── Requests/
+│   └── Responses/
+└── Program.cs
+```
+
+## Dependency Injection Setup
+
+Trong `Program.cs`:
+
+```csharp
+var builder = WebApplication.CreateBuilder(args);
+
+// Domain services
+builder.Services.AddScoped<IPricingService, PricingService>();
+
+// Application services
+builder.Services.AddScoped<ICreateOrderHandler, CreateOrderHandler>();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// Infrastructure services
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(connectionString));
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Presentation services
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+var app = builder.Build();
+```
+
+## Nguyên tắc quan trọng
+
+**Dependency Rule**: Các lớp bên trong không được phụ thuộc vào lớp bên ngoài
+- Domain không phụ thuộc vào bất kỳ lớp nào khác
+- Application chỉ phụ thuộc vào Domain
+- Infrastructure có thể phụ thuộc vào Application và Domain
+- Presentation phụ thuộc vào Application
+
+**Aggregate Boundaries**: Mỗi aggregate có một root entity và được truy cập thông qua repository
+
+**Domain Events**: Sử dụng để loose coupling giữa các bounded context
+
+Cấu trúc này giúp tách biệt rõ ràng các concerns, dễ dàng testing và maintain code theo thời gian.
+
+# MyAccount - User Account Management System
+
+A .NET 8 Clean Architecture + Domain-Driven Design (DDD) implementation for managing user accounts.
+
+## Project Structure
+
+```
+MyAccount/
+├── src/
+│   ├── MyAccount.Domain/          # Domain Layer
+│   ├── MyAccount.Application/     # Application Layer
+│   ├── MyAccount.Infrastructure/  # Infrastructure Layer
+│   ├── MyAccount.Presentation/    # API Layer
+│   └── MyAccount.Shared/          # Shared Kernel
+├── tests/
+└── docs/
+```
+
+## Architecture
+
+This project follows the principles of Clean Architecture and Domain-Driven Design (DDD):
+
+1. **Domain Layer**: Core business logic and entities
+2. **Application Layer**: Use cases, commands, queries, and DTOs
+3. **Infrastructure Layer**: External concerns like databases, files, and APIs
+4. **Presentation Layer**: API endpoints and controllers
+
+## Getting Started
+
+### Prerequisites
+
+- .NET 8.0 SDK
+- MySQL 8.0 or later
+- Visual Studio 2022 or JetBrains Rider
+
+### Setup
+
+1. Clone the repository
+2. Update connection string in `src/MyAccount.Presentation/appsettings.json`
+3. Run database migrations:
+
+```bash
+cd src/MyAccount.Presentation
+dotnet ef database update
+```
+
+4. Run the application:
+
+```bash
+dotnet run
+```
+
+## Features
+
+- User account management
+- Profile management
+- Two-factor authentication
+- Session management
+- Activity logging
+- Notification settings
+- Privacy settings
+- Payment methods
+- Transaction history
+- API key management
+
+## Database Schema
+
+The database schema includes tables for:
+
+- Users
+- User profiles
+- Two-factor authentication
+- Sessions
+- Activity logs
+- Notification settings
+- Privacy settings
+- Payment methods
+- Transactions
+- User tokens (JWT)
+- API keys
+
+## Dependencies
+
+- Entity Framework Core
+- MediatR for CQRS
+- AutoMapper for object mapping
+- FluentValidation for validation
+- Pomelo.EntityFrameworkCore.MySql for MySQL support
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
